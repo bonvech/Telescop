@@ -92,7 +92,7 @@ class Data():
         df['ch'] = df["ch"].astype(int)
         Data.File = df
 
-        q = pd.read_csv('xy_49_from_lens.dat', sep='\s+')
+        q = pd.read_csv('xy.dat', sep='\s+')
 
         Sipm = q['SIPM'].to_list()
         x_sm = q['x_sm'].to_list()
