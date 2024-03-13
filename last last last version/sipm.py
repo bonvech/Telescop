@@ -218,7 +218,7 @@ class VisualWindow(QMainWindow):
         self.setWindowTitle("Settings")
         self.setMinimumWidth(650)
         self.setMinimumHeight(400)
-        self.setFixedSize(390, 300)
+        self.setFixedSize(390, 200)
 
         self.centralwidget = QWidget()
         self.setCentralWidget(self.centralwidget)
@@ -410,6 +410,11 @@ class VisualWindow(QMainWindow):
 
     def setDefultSETTINGS(self):
         self.parent.settings = self.parent.DefultSettings()
+        self.sizeButtons.setValue(float(self.parent.settings.get('Set_SIMPS', 'buttonsHW')))
+        self.spinX.setValue(float(self.parent.settings.get('Set_SIMPS', 'moveX'))) 
+        self.spinY.setValue(float(self.parent.settings.get('Set_SIMPS', 'moveY')))
+        self.moveX.setValue(int(self.parent.settings.get('Set_SIMPS', 'movingX'))) 
+        self.moveY.setValue(int(self.parent.settings.get('Set_SIMPS', 'movingY'))) 
         self.HSznach.setChecked(False if self.parent.settings.get('Set_HStext', 'HZnach') == '1' else True)
         self.HSsipm.setChecked(False if self.parent.settings.get('Set_HStext', 'HSipm') == '1' else True) 
         self.HSchan.setChecked(False if self.parent.settings.get('Set_HStext', 'HChan') == '1' else True)
