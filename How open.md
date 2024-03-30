@@ -16,7 +16,7 @@
 
 ###### sudo apt update
 
-###### ***Если у Вас нет, усатновите python*** 
+###### sudo apt install python3 -y
 
 ###### ***Если у Вас нет, усатновите python*** 
 
