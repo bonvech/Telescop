@@ -18,7 +18,7 @@
 
 ###### sudo apt install python3 -y
 
-###### ***Если у Вас нет, усатновите python*** 
+###### sudo apt install python3-pip -y
 
 Для начала скачайте папку programm (или все файлы) Скачанный архим разархивируйте
 
