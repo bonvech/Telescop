@@ -6,7 +6,7 @@ import pandas as pd
 
 import colorsys
 from PyQt6 import uic  # Импортируем uic
-from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QVBoxLayout, QLabel, QMenu, QPushButton, QWidget, QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QMessageBox, QSlider, QPlainTextEdit, QTextBrowser
+from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QVBoxLayout, QLabel, QMenu, QPushButton, QWidget, QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QMessageBox, QSlider, QPlainTextEdit, QTextBrowser, QHBoxLayout
 from PyQt6.QtGui import QPixmap, QFont, QAction
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import QObject, QThread, pyqtSignal, Qt
@@ -18,6 +18,10 @@ import matplotlib.cm as cm
 import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
+
 
 class WorkerPD(QObject):
 
@@ -1037,122 +1041,147 @@ class App(QMainWindow):
     def resizeEvent(self, event):
         self.resized.emit()
         return super(App, self).resizeEvent(event)
+
+
+class MplCanvas(FigureCanvasQTAgg):
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        fig.tight_layout()
+        #fig.subplots_adjust(left=0.020, right=0.980, top=0.950, bottom=0.090)
+        self.axes = fig.add_subplot(111)
+        super(MplCanvas, self).__init__(fig)
+
     
 class Chan(QMainWindow):
 
-    resized = QtCore.pyqtSignal()
+    #resized = QtCore.pyqtSignal()
     
     def __init__(self, b, parent):
         
         super().__init__()
-        self.setGeometry(300, 50, 230, 100)
-        self.setMinimumWidth(230)
-        self.setMinimumHeight(100)
+        self.setMinimumWidth(500)
+        self.setMinimumHeight(500)
         self.setWindowTitle(f"S{b.sipm} C{b.ch} ")
 
-        self.centralwidget = QWidget()
-        self.setCentralWidget(self.centralwidget)
-        self.resized.connect(self.newSize)
-
         self.parent = parent
+        self.b = b
 
+        self.sc = MplCanvas(self, width=5, height=4, dpi=100)
 
         self.chan = QLabel(f"Chan: {b.ch}", self)
-        self.chan.move(10, 10)
+        #chan.move(10, 10)
+        self.chan.setFixedSize(200, 30)
 
         self.sipm = QLabel(f"SIPM: {b.sipm}", self)
-        self.sipm.move(10, 30)
+        #sipm.move(10, 30)
+        self.sipm.setFixedSize(200, 30)
 
         self.amax  = QLabel(f"A Max: {b.znach}", self)
-        self.amax.move(10, 50)
+        #amax.move(10, 50)
+        self.amax.setFixedSize(200, 30)
 
         self.event = QComboBox(self)
         self.event.clear()
         self.event.addItems(['All'] + [str(i) for i in parent.df['Event'].unique()])
-        self.event.setFixedSize(40, 25)
+        self.event.setFixedSize(200, 30)
         self.event.move(230, 10)
         self.event.activated.connect(self.drowew)
 
-        self.drownowevent = QPushButton(f'Draw now\nevent ({self.parent.event})', self)
-        self.drownowevent.setFixedSize(65, 40)
-        self.drownowevent.clicked.connect(self.drowNowEvent)
+        self.len = len(['All'] + [str(i) for i in parent.df['Event'].unique()])
+        self.index = (['All'] + [str(i) for i in parent.df['Event'].unique()]).index(self.parent.event)
+        self.event.setCurrentIndex(self.index)
 
-        self.Or = QLabel('or', self)
-        self.Or.move(20, 20)
-        self.Or.setFixedSize(25, 25)
+        self.right_b = QPushButton(f'->', self)
+        self.right_b.setFixedSize(150, 30)
+        self.right_b.clicked.connect(self.right_b_func)
 
-        self.time = QLabel(f'Time: {self.parent.nowtime}', self)
-        self.time.move(10, 70)
+        self.left_b = QPushButton(f'<-', self)
+        self.left_b.setFixedSize(150, 30)
+        self.left_b.clicked.connect(self.left_b_func)
 
-        self.b = b
+        #self.time = QLabel(f'Time: {self.parent.nowtime}', self)
+        #self.time.move(10, 70)
+
+        self.Hl = QHBoxLayout()
+        self.Hl.addWidget(self.chan)
+        self.Hl.addWidget(self.sipm)
+        self.Hl.addWidget(self.amax)
+        self.Hl.addWidget(self.left_b)
+        self.Hl.addWidget(self.right_b)
+        self.Hl.addWidget(self.event)
+
+        toolbar = NavigationToolbar(self.sc, self)
+
+        layout = QVBoxLayout()
+        layout.addWidget(toolbar)
+        layout.addWidget(self.sc)
+        layout.addLayout(self.Hl)
+
+        # Create a placeholder widget to hold our toolbar and canvas.
+        widget = QWidget()
+        widget.setLayout(layout)
+
+        self.centralwidget = widget
+        self.setCentralWidget(widget)
+        #self.resized.connect(self.newSize)
+
+        self.drowew()
+
+    def right_b_func(self):
+        self.index += 1
+        if self.index == self.len:
+            self.index = 0
+        self.event.setCurrentIndex(self.index)
+        self.drowew()
+
+    def left_b_func(self):
+        self.index -= 1
+        if self.index == -1:
+            self.index = self.len - 1
+        self.event.setCurrentIndex(self.index)
+        self.drowew()
 
     def drowew(self):
+        self.sc.axes.cla() 
         if self.event.currentText() == "All":
             plot_data = self.parent.df[(self.parent.df['ch'] == self.b.ch) & (self.parent.df['SIPM'] == self.b.sipm)]
             x = range(0,1024)
-            fig, ax = plt.subplots()
             for i in self.parent.df['Event'].unique():
                 y = plot_data[plot_data['Event'] == i].iloc[0][5:]
-                plt.plot(x, y, label=f"{str(i)}")
-            ax.grid(linestyle='--', color='pink') 
-            ax.set_xlim([0, 1023])
-            ax.set_xlabel('time')
-            ax.set_ylabel('amplitude')
-            ax.set_title(f'S{self.b.sipm} C{self.b.ch} In All Events')
-            ax.legend(ncol=1, loc="upper left", bbox_to_anchor=(1,1))
+                self.sc.axes.plot(x, y, label=f"{str(i)}")
+            self.sc.axes.grid(linestyle='--', color='pink') 
+            self.sc.axes.set_xlim([0, 1023])
+            self.sc.axes.set_xlabel('time')
+            self.sc.axes.set_ylabel('amplitude')
+            self.sc.axes.set_title(f'S{self.b.sipm} C{self.b.ch} In All Events')
+            self.sc.axes.legend(ncol=1, loc="upper left", bbox_to_anchor=(1,1))
             #plt.clf()
-            plt.show()
+            self.sc.draw()
             
         else:
             plot_data = self.parent.df[((self.parent.df['Event'] == int(self.event.currentText()))&(self.parent.df['ch'] == self.b.ch)&(self.parent.df['SIPM'] == self.b.sipm))]
             print(plot_data.head())
             y = plot_data.iloc[0][5:].tolist()
             x = range(0,1024)
-            fig, ax = plt.subplots()
             #ax.figure(figsize=(7,4))
-            ax.plot(x, y)
-            ax.set_title(f'Event {self.event.currentText()} S{self.b.sipm} C{self.b.ch}')
-            ax.grid(linestyle='--', color='pink')
-            ax.set_xlim([0, 1023])
-            ax.set_xlabel('time')
-            ax.set_ylabel('amplitude')
-            #plt.clf()
-            plt.show()
+            self.sc.axes.plot(x, y)
+            self.sc.axes.set_title(f'Event {self.event.currentText()} S{self.b.sipm} C{self.b.ch}')
+            self.sc.axes.grid(linestyle='--', color='pink')
+            self.sc.axes.set_xlim([0, 1023])
+            self.sc.axes.set_xlabel('time')
+            self.sc.axes.set_ylabel('amplitude')
+            self.sc.draw()
 
-
-    def drowNowEvent(self):
-        print(self.b.ch)
-        print(self.b.sipm)
-        plot_data = self.parent.df[((self.parent.df['Event'] == int(self.parent.event))&(self.parent.df['ch'] == self.b.ch)&(self.parent.df['SIPM'] == self.b.sipm))]
-        print(plot_data.head())
-        y = plot_data.iloc[0][5:].tolist()
-        x = range(0,1024)
-        plt.figure(figsize=(7,4))
-        plt.plot(x, y)
-        plt.title(f'Event {self.parent.event} Time: {self.parent.nowtime} S{self.b.sipm} C{self.b.ch}')
-        ax = plt.gca()
-        ax.set_xlim([0, 1023])
-        ax.set_xlabel('time')
-        ax.set_ylabel('amplitude')
-        #ax.set_ylim([, ])
-        plt.grid(linestyle='--', color='pink') 
-        plt.savefig('0.png', bbox_inches='tight')
-        plt.show()
-        #plt.clf()
-
-    def resizeEvent(self, event):
-        self.resized.emit()
-        return super(Chan, self).resizeEvent(event)
+    #def resizeEvent(self, event):
+    #    self.resized.emit()
+    #   return super(Chan, self).resizeEvent(event)
     
     def closeEvent(self, event):
         self.b.f = False
     
     def newSize(self):
-        #self.drow.move(self.centralwidget.frameSize().width() // 2 - 50, 30)
-        self.drownowevent.move(self.centralwidget.frameSize().width() // 2 - 50, 10)
-        self.event.move(self.centralwidget.frameSize().width() - 50, 10)
-        self.Or.move(self.centralwidget.frameSize().width() // 4 * 3 - 22, 10)
-        #self.events.move(self.centralwidget.frameSize().width() - 75, 10)
+        pass
 
 class Reference(QMainWindow):
 
