@@ -1071,20 +1071,20 @@ class Chan(QMainWindow):
 
         self.chan = QLabel(f"Chan: {b.ch}", self)
         #chan.move(10, 10)
-        self.chan.setFixedSize(200, 30)
+        self.chan.setFixedSize(100, 30)
 
         self.sipm = QLabel(f"SIPM: {b.sipm}", self)
         #sipm.move(10, 30)
-        self.sipm.setFixedSize(200, 30)
+        self.sipm.setFixedSize(100, 30)
 
         self.amax  = QLabel(f"A Max: {b.znach}", self)
         #amax.move(10, 50)
-        self.amax.setFixedSize(200, 30)
+        self.amax.setFixedSize(100, 30)
 
         self.event = QComboBox(self)
         self.event.clear()
         self.event.addItems(['All'] + [str(i) for i in parent.df['Event'].unique()])
-        self.event.setFixedSize(200, 30)
+        self.event.setFixedSize(100, 30)
         self.event.move(230, 10)
         self.event.activated.connect(self.drowew)
 
@@ -1093,20 +1093,22 @@ class Chan(QMainWindow):
         self.event.setCurrentIndex(self.index)
 
         self.right_b = QPushButton(f'->', self)
-        self.right_b.setFixedSize(150, 30)
+        self.right_b.setFixedSize(50, 30)
         self.right_b.clicked.connect(self.right_b_func)
 
         self.left_b = QPushButton(f'<-', self)
-        self.left_b.setFixedSize(150, 30)
+        self.left_b.setFixedSize(50, 30)
         self.left_b.clicked.connect(self.left_b_func)
 
-        #self.time = QLabel(f'Time: {self.parent.nowtime}', self)
+        self.time = QLabel(f'Time: {self.parent.nowtime}', self)
+        self.time.setFixedSize(200, 30)
         #self.time.move(10, 70)
 
         self.Hl = QHBoxLayout()
         self.Hl.addWidget(self.chan)
         self.Hl.addWidget(self.sipm)
         self.Hl.addWidget(self.amax)
+        self.Hl.addWidget(self.time)
         self.Hl.addWidget(self.left_b)
         self.Hl.addWidget(self.right_b)
         self.Hl.addWidget(self.event)
@@ -1147,6 +1149,7 @@ class Chan(QMainWindow):
         if self.event.currentText() == "All":
             plot_data = self.parent.df[(self.parent.df['ch'] == self.b.ch) & (self.parent.df['SIPM'] == self.b.sipm)]
             x = range(0,1024)
+            self.time.setText('-')
             for i in self.parent.df['Event'].unique():
                 y = plot_data[plot_data['Event'] == i].iloc[0][5:]
                 self.sc.axes.plot(x, y, label=f"{str(i)}")
@@ -1158,10 +1161,12 @@ class Chan(QMainWindow):
             self.sc.axes.legend(ncol=1, loc="upper left", bbox_to_anchor=(1,1))
             #plt.clf()
             self.sc.draw()
+            self.amax.setText(f'-')
             
         else:
             plot_data = self.parent.df[((self.parent.df['Event'] == int(self.event.currentText()))&(self.parent.df['ch'] == self.b.ch)&(self.parent.df['SIPM'] == self.b.sipm))]
             print(plot_data.head())
+            self.time.setText(f'Time: {plot_data['Time'].unique()[0]}')
             y = plot_data.iloc[0][5:].tolist()
             x = range(0,1024)
             #ax.figure(figsize=(7,4))
@@ -1172,6 +1177,7 @@ class Chan(QMainWindow):
             self.sc.axes.set_xlabel('time')
             self.sc.axes.set_ylabel('amplitude')
             self.sc.draw()
+            self.amax.setText(f'{max(y)}')
 
     #def resizeEvent(self, event):
     #    self.resized.emit()
