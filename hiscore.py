@@ -52,7 +52,8 @@ class WorkerAutoPlayer(QObject):
                 print(self.q)
                 self.i-=1
                 if self.i <= 0:
-                    self.i = n
+                    self.i = -n
+                print(self.i)
                 self.progress.emit(self.i)
                 time.sleep(5 / self.dady.sliderAutoPlayer.value())
 
