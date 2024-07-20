@@ -386,7 +386,7 @@ class Appp(QMainWindow):
         self.list_of_ustanovki = []
         self.events_is_ustanovki = []
 
-        self.timeofeventText.setText('\n'.join([f'St {i.split()[0]} event {i.split()[1]}, time {i.split()[2]}' for i in s]))
+        self.timeofeventText.setText('\n'.join([f'St {i.split()[0]} ev {i.split()[1]} time {i.split()[2]}' for i in s]))
         self.timeofeventText.setFixedHeight(17*len(s))
 
         for i in s:
@@ -507,7 +507,7 @@ class Appp(QMainWindow):
 
         self.filenameText.move(W-420, H*3//4)
         self.directorynameText.move(W-420, H*3//4+30)
-        self.timeofeventText.move(int(W-270), 30)
+        self.timeofeventText.move(int(W-280), 30)
         self.savedfset.move(W-200, H*3//4-40)
         self.qq.setFixedWidth(int(W//2.9))
         self.btn_startL.setFixedWidth(W//9-10)
