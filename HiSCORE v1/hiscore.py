@@ -35,22 +35,34 @@ class WorkerAutoPlayer(QObject):
 
     @Slot(int)
     def do_work(self, n):
-        while self.q:
-            time.sleep(5 / self.dady.sliderAutoPlayer.value())
-            self.progress.emit(self.i)
-            print(self.q)
-            self.i+=1
-            time.sleep(5 / self.dady.sliderAutoPlayer.value())
-            if self.i > n:
-                self.i = 1
-            
+        if n>0:
+            while self.q:
+                time.sleep(5 / self.dady.sliderAutoPlayer.value())
+                
+                print(self.q)
+                self.i+=1
+                if self.i > n:
+                    self.i = 1
+                self.progress.emit(self.i)
+                time.sleep(5 / self.dady.sliderAutoPlayer.value())
+
+        else:
+            while self.q:
+                time.sleep(5 / self.dady.sliderAutoPlayer.value())
+                print(self.q)
+                self.i-=1
+                if self.i <= 0:
+                    self.i = n
+                self.progress.emit(self.i)
+                time.sleep(5 / self.dady.sliderAutoPlayer.value())
+
 
         if self.q:
             self.completed.emit(self.i)
 
     def stop(self):
         self.q = False
-        self.completed.emit(self.i-1)
+        self.completed.emit(self.i)
 
 
 class Appp(QMainWindow):
@@ -66,7 +78,35 @@ class Appp(QMainWindow):
         self.setMinimumWidth(650)
         self.setMinimumHeight(450)
 
+        self.buttonleft = QPushButton('<-', self)
+        self.buttonright = QPushButton('->', self)
+        self.btn_startR = QPushButton('>>', self, clicked=self.stratAutoPlayerR)
+        self.btn_startL = QPushButton('<<', self, clicked=self.stratAutoPlayerL)
+        self.btn_stop = QPushButton('Stop', self, clicked=lambda: self.workerAutoPlayer.stop())
+        self.sliderAutoPlayer = QSlider(self)
+
+
         self.centralwidget = QWidget()
+        hay = QVBoxLayout()
+        hay.addWidget(QWidget())
+        LAY = QHBoxLayout()
+        self.qq = QWidget()
+        self.qq.setFixedWidth(100)
+        LAY.addWidget(self.qq)
+        lay = QHBoxLayout()
+        
+        lay.addWidget(self.buttonleft)
+        lay.addWidget(self.btn_startL)
+        lay.addWidget(self.btn_stop)
+        lay.addWidget(self.btn_startR)
+        lay.addWidget(self.buttonright)
+        lay.addWidget(self.sliderAutoPlayer)    
+
+        LAY.addLayout(lay)
+        hay.addLayout(LAY)
+        
+        self.centralwidget.setLayout(hay)
+
         self.setCentralWidget(self.centralwidget)
         self.resized.connect(self.newSize)
 
@@ -76,15 +116,13 @@ class Appp(QMainWindow):
         self.box_of_events.move(10, 30)
         self.box_of_events.setFixedSize(90, 20)
         self.box_of_events.activated.connect(self.boxEventwasChanged)
-
-        self.buttonleft = QPushButton('<-', self)
+   
         self.buttonleft.clicked.connect(self.btnL)
-        self.buttonleft.setFixedSize(30, 30)
+        #self.buttonleft.setFixedSize(30, 30)
         #self.buttonleft.hide()
 
-        self.buttonright = QPushButton('->', self)
         self.buttonright.clicked.connect(self.btnR)
-        self.buttonright.setFixedSize(30, 30)
+        #self.buttonright.setFixedSize(30, 30)
         #self.buttonright.hide()
 
         self.directory_of_ustanovki = ''
@@ -142,14 +180,17 @@ class Appp(QMainWindow):
 
         self.filenameText = QLabel('None', self)
         self.filenameText.move(40, 40)
+        self.filenameText.setFont(QFont("Times", 10))
         self.filenameText.setFixedWidth(500)
 
         self.directorynameText = QLabel('None', self)
         self.directorynameText.move(40, 60)
+        self.directorynameText.setFont(QFont("Times", 10))
         self.directorynameText.setFixedWidth(500)
 
         self.timeofeventText = QLabel('None', self)
         self.timeofeventText.move(10, 80)
+        self.timeofeventText.setFont(QFont("Times", 10))
         self.timeofeventText.setFixedSize(500, 500)
 
         self.savedfset = QPushButton('Save dir and\nfilename in config', self)
@@ -165,20 +206,20 @@ class Appp(QMainWindow):
 
         self.work_requested.connect(self.workerAutoPlayer.do_work)
 
-        self.btn_start = QPushButton('Start', self, clicked=self.stratAutoPlayer)
-        self.btn_start.move(10, 120)
-        self.btn_start.setFixedSize(60, 25)
-        self.btn_stop = QPushButton('Stop', self, clicked=lambda: self.workerAutoPlayer.stop())
+        
+        #self.btn_start.move(10, 120)
+        #self.btn_start.setFixedSize(60, 25)
+        
         self.btn_stop.move(10, 140)
-        self.btn_stop.setFixedSize(60, 25)
+        #self.btn_stop.setFixedSize(60, 25)
 
         self.workerAutoPlayer.moveToThread(self.workerAutoPlayer_thread)
 
-        self.sliderAutoPlayer = QSlider(self)
+        
         self.sliderAutoPlayer.setOrientation(Qt.Orientation.Horizontal) 
-        self.sliderAutoPlayer.move(10, 150)
+        #self.sliderAutoPlayer.move(10, 150)
         self.sliderAutoPlayer.setRange(10,100)
-        self.sliderAutoPlayer.setFixedSize(60, 25)
+        #self.sliderAutoPlayer.setFixedSize(60, 25)
 
         # start the thread
         self.workerAutoPlayer_thread.start()
@@ -188,14 +229,25 @@ class Appp(QMainWindow):
 
         self.check()
 
-    def stratAutoPlayer(self):
+    def stratAutoPlayerR(self):
         if self.file_name == "":
             return None
-        self.btn_start.setEnabled(False)
+        self.btn_startL.setEnabled(False)
+        self.tartR.setEnabled(False)
         n = 5
         self.workerAutoPlayer.i = int(self.box_of_events.currentText())
         self.workerAutoPlayer.q = True
         self.work_requested.emit(self.len_of_events)
+
+    def stratAutoPlayerL(self):
+        if self.file_name == "":
+            return None
+        self.btn_startL.setEnabled(False)
+        self.btn_startR.setEnabled(False)
+        n = 5
+        self.workerAutoPlayer.i = int(self.box_of_events.currentText())
+        self.workerAutoPlayer.q = True
+        self.work_requested.emit(-self.len_of_events)
 
     def update_progress(self, s):
         self.box_of_events.setCurrentText(str(s))
@@ -203,7 +255,8 @@ class Appp(QMainWindow):
 
     def complete(self, s):
         self.box_of_events.setCurrentText(str(s))
-        self.btn_start.setEnabled(True)
+        self.btn_startL.setEnabled(True)
+        self.btn_startR.setEnabled(True)
 
     def check(self):
 
@@ -332,7 +385,7 @@ class Appp(QMainWindow):
         self.list_of_ustanovki = []
         self.events_is_ustanovki = []
 
-        self.timeofeventText.setText('\n'.join([" ".join(i.split()[:3]) for i in s]))
+        self.timeofeventText.setText('\n'.join([f'St {i.split()[0]} event {i.split()[1]}, time {i.split()[2]}' for i in s]))
         self.timeofeventText.setFixedHeight(17*len(s))
 
         for i in s:
@@ -399,7 +452,7 @@ class Appp(QMainWindow):
             for j in range(9):
                 s.append(d[i + j + 1].split()) 
             if not b.f:
-                b.win.append(Ustanovka(b, self, df=df, event=int(ev), fn=self.file_name))
+                b.win.append(Ustanovka(b, self, df=df, event=int(ev), fn=f'/station_{res}.dat'))
                 b.win[-1].show()
                 b.f = False
             return None
@@ -417,16 +470,16 @@ class Appp(QMainWindow):
         H = self.centralwidget.frameSize().height()
         W = self.centralwidget.frameSize().width()
 
-        self.btn_start.move(W-65, 25)
-        self.btn_stop.move(W-65, 50)
-        self.sliderAutoPlayer.move(W-65, 75)
+        #self.btn_start.move(W-65, 25)
+        #self.btn_stop.move(W-65, 50)
+        #self.sliderAutoPlayer.move(W-65, 75)
 
-        self.buttonleft.move(W - 65, H - 10)
-        self.buttonright.move(W - 35, H - 10)
+        #self.buttonleft.move(W - 65, H - 10)
+        #self.buttonright.move(W - 35, H - 10)
 
         #self.timeofeventText.move(10, 20)
 
-        self.savedfset.move(10, H-65)
+        #self.savedfset.move(10, H-65)
 
         S = min(round(H/buttonsHW), round(W/buttonsHW))
         s = min(round(H), round(W))
@@ -449,10 +502,19 @@ class Appp(QMainWindow):
                 else:
                     k = str(str(int(i.znach)) + str("\n" if self.HSipm else "") if self.HZnach else "") + str("SIPM:" + str(i.sipm) + str("\n" if self.HChan else "") if self.HSipm else "") + str("Ch:" + str(i.ch) if self.HChan else "")
                     i.setText(k)   
-            i.move(round((i.x - 250) * S / moveX) + W // 2+movingX, round((i.y) * S / moveY)+ H // 2 + movingY)
+            i.move(round((i.x - 250) * S / moveX) + W // 2+movingX - W//5, round((i.y) * S / moveY)+ H // 2 + movingY)
 
-        self.filenameText.move(20, H - 30)
-        self.directorynameText.move(20, H - 10)
+        self.filenameText.move(W-420, H*3//4)
+        self.directorynameText.move(W-420, H*3//4+30)
+        self.timeofeventText.move(int(W-270), 30)
+        self.savedfset.move(W-200, H*3//4-40)
+        self.qq.setFixedWidth(int(W//2.9))
+        self.btn_startL.setFixedWidth(W//9-10)
+        self.btn_startR.setFixedWidth(W//9-10)
+        self.buttonleft.setFixedWidth(W//9-10)
+        self.buttonright.setFixedWidth(W//9-10)
+        self.btn_stop.setFixedWidth(W//9-10)
+        self.sliderAutoPlayer.setFixedWidth(W//9-10)
             
     def OpenF(self):
         '''
@@ -604,6 +666,7 @@ class Ustanovka(QMainWindow):
         self.sliderAutoPlayerUs.setOrientation(Qt.Orientation.Horizontal) 
         self.sliderAutoPlayerUs.move(10, 150)
         self.sliderAutoPlayerUs.setRange(10,100)
+        self.sliderAutoPlayerUs.setMaximumWidth(100)
         #self.sliderAutoPlayerUs.setFixedSize(60, 25)
 
         # start the thread
@@ -710,10 +773,10 @@ class Ustanovka(QMainWindow):
         lay1.addWidget(self.w)
 
         self.ba = QComboBox(self)
-        self.ba.addItems(['a1', 'a2', 'a3', 'a4', 'Все'])
+        self.ba.addItems(['Все', 'a1', 'a2', 'a3', 'a4'])
         self.ba.activated.connect(self.fq1)
         self.bd = QComboBox(self)
-        self.bd.addItems(['d1', 'd2', 'd3', 'd4', 'Все'])
+        self.bd.addItems(['Все', 'd1', 'd2', 'd3', 'd4'])
         self.bd.activated.connect(self.fq2)
 
         lay5 = QVBoxLayout()
@@ -1135,8 +1198,8 @@ class Ustanovka(QMainWindow):
         if self.ba.currentText() == 'Все':
             self.sc1.axes.plot(self.a1, color='blue', label=f"a1")
             self.sc1.axes.plot(self.a2, color='red', label=f"a2")
-            self.sc1.axes.plot(self.a3, color='pink', label=f"a3")
-            self.sc1.axes.plot(self.a4, color='yellow', label=f"a4")
+            self.sc1.axes.plot(self.a3, color='green', label=f"a3")
+            self.sc1.axes.plot(self.a4, color='#00FFFF', label=f"a4")
             if q != 0:
                 self.sc1.axes.plot([q, q], [0, max(self.a1 + self.a2 + self.a3 + self.a4)], color='green')
             self.sc1.axes.legend(ncol=1, bbox_to_anchor=(1,1), loc='upper right')
@@ -1148,23 +1211,28 @@ class Ustanovka(QMainWindow):
             self.sc1.draw()
             return None
 
+        color = ""
 
         if self.ba.currentText() == 'a1':
             plot_data = self.a1
             if q != 0:
                 self.sc1.axes.plot([q, q], [0, max(self.a1)], color='green')
+            color = "blue"
         elif self.ba.currentText() == 'a2':
             plot_data = self.a2
             if q != 0:
                self.sc1.axes.plot([q, q], [0, max(self.a2)], color='green')
+            color = 'red'
         elif self.ba.currentText() == 'a3':
             plot_data = self.a3
             if q != 0:
                 self.sc1.axes.plot([q, q], [0, max(self.a3)], color='green')
+            color = 'green'
         elif self.ba.currentText() == 'a4':
             plot_data = self.a4
             if q != 0:
-              self.sc1.axes.plot([q, q], [0, max(self.a4)], color='green')
+                self.sc1.axes.plot([q, q], [0, max(self.a4)], color='green')
+            color = '#00FFFF'
 
         
 
@@ -1172,7 +1240,7 @@ class Ustanovka(QMainWindow):
             #ax.figure(figsize=(7,4))
         self.sc1.axes.plot(plot_data, color='blue')
             #self.sc.axes.set_title(f'Event {self.event.currentText()} S{self.b.sipm} C{self.b.ch}')
-        self.sc1.axes.grid(linestyle='--', color='pink')
+        self.sc1.axes.grid(linestyle='--', color=color)
             #self.sc.axes.set_xlim([0, 1023])
         self.sc1.axes.set_xlabel('time')
         self.sc1.axes.set_ylabel('amplitude')
@@ -1185,8 +1253,8 @@ class Ustanovka(QMainWindow):
         if self.bd.currentText() == 'Все':
             self.sc2.axes.plot(self.d1, color='blue', label=f"d1")
             self.sc2.axes.plot(self.d2, color='red', label=f"d2")
-            self.sc2.axes.plot(self.d3, color='pink', label=f"d3")
-            self.sc2.axes.plot(self.d4, color='yellow', label=f"d4")
+            self.sc2.axes.plot(self.d3, color='green', label=f"d3")
+            self.sc2.axes.plot(self.d4, color='#00FFFF', label=f"d4")
             if q != 0:
                 self.sc2.axes.plot([q, q], [0, max(self.d1 + self.d2 + self.d3 + self.d4)], color='green')
             self.sc2.axes.legend(ncol=1, bbox_to_anchor=(1,1), loc='upper right')
@@ -1198,26 +1266,34 @@ class Ustanovka(QMainWindow):
             self.sc2.draw()
             return None
 
+        color = ''
+
         if self.bd.currentText() == 'd1':
             plot_data = self.d1
             if q != 0:
                 self.sc2.axes.plot([q, q], [0, max(self.d1)], color='green')
+            color = 'blue'
         elif self.bd.currentText() == 'd2':
             plot_data = self.d2
             if q != 0:
                 self.sc2.axes.plot([q, q], [0, max(self.d2)], color='green')
+            color = 'red'
         elif self.bd.currentText() == 'd3':
             plot_data = self.d3
             if q != 0:
                 self.sc2.axes.plot([q, q], [0, max(self.d3)], color='green')
+            color = 'green'
         elif self.bd.currentText() == 'd4':
+            plot_data = self.d4
             if q != 0:
                 q  = self.d4.index(max(self.d4))
-            self.sc2.axes.plot([q, q], [0, max(self.d4)], color='green')
+                #self.sc2.axes.plot([q, q], [0, max(self.d4)], color='green')
+            color = '#00FFFF'
+
 
         x = range(0,400)
             #ax.figure(figsize=(7,4))
-        self.sc2.axes.plot(plot_data, color='blue')
+        self.sc2.axes.plot(plot_data, color=color)
             #self.sc.axes.set_title(f'Event {self.event.currentText()} S{self.b.sipm} C{self.b.ch}')
         self.sc2.axes.grid(linestyle='--', color='pink')
             #self.sc.axes.set_xlim([0, 1023])
