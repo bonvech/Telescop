@@ -52,7 +52,8 @@ class WorkerAutoPlayer(QObject):
                 print(self.q)
                 self.i-=1
                 if self.i <= 0:
-                    self.i = n
+                    self.i = -n
+                print(self.i)
                 self.progress.emit(self.i)
                 time.sleep(5 / self.dady.sliderAutoPlayer.value())
 
@@ -95,11 +96,13 @@ class Appp(QMainWindow):
         LAY.addWidget(self.qq)
         lay = QHBoxLayout()
         
-        lay.addWidget(self.buttonleft)
+        
         lay.addWidget(self.btn_startL)
+        lay.addWidget(self.buttonleft)
         lay.addWidget(self.btn_stop)
-        lay.addWidget(self.btn_startR)
         lay.addWidget(self.buttonright)
+        lay.addWidget(self.btn_startR)
+        
         lay.addWidget(self.sliderAutoPlayer)    
 
         LAY.addLayout(lay)
@@ -233,7 +236,7 @@ class Appp(QMainWindow):
         if self.file_name == "":
             return None
         self.btn_startL.setEnabled(False)
-        self.tartR.setEnabled(False)
+        self.btn_startR.setEnabled(False)
         n = 5
         self.workerAutoPlayer.i = int(self.box_of_events.currentText())
         self.workerAutoPlayer.q = True
@@ -265,7 +268,7 @@ class Appp(QMainWindow):
                 QMessageBox.about(self, "Error", "Папки указанной в настройках не сущетвует")
             else:
                 self.directory_of_ustanovki = self.settings.get('Set_path', 'directory')
-                self.directorynameText.setText(f'directory: {self.directory_of_ustanovki}')
+                self.directorynameText.setText(f'dir: {self.directory_of_ustanovki}')
 
         if self.settings.get('Set_path', 'filename') != 'None':
             if os.path.exists(self.settings.get('Set_path', 'filename')) is not True:
@@ -366,7 +369,7 @@ class Appp(QMainWindow):
         
         if str(fname) != '':
             self.directory_of_ustanovki = str(fname)
-            self.directorynameText.setText(f'directory: {self.directory_of_ustanovki}')
+            self.directorynameText.setText(f'dir: {self.directory_of_ustanovki}')
             #self.openingFile(fname)
         else:
             return None   
@@ -385,7 +388,7 @@ class Appp(QMainWindow):
         self.list_of_ustanovki = []
         self.events_is_ustanovki = []
 
-        self.timeofeventText.setText('\n'.join([f'St {i.split()[0]} event {i.split()[1]}, time {i.split()[2]}' for i in s]))
+        self.timeofeventText.setText('\n'.join([f'\t{i.split()[0]}\t{i.split()[1]}\t{i.split()[2]}' for i in s]))
         self.timeofeventText.setFixedHeight(17*len(s))
 
         for i in s:
@@ -504,10 +507,10 @@ class Appp(QMainWindow):
                     i.setText(k)   
             i.move(round((i.x - 250) * S / moveX) + W // 2+movingX - W//5, round((i.y) * S / moveY)+ H // 2 + movingY)
 
-        self.filenameText.move(W-420, H*3//4)
-        self.directorynameText.move(W-420, H*3//4+30)
-        self.timeofeventText.move(int(W-270), 30)
-        self.savedfset.move(W-200, H*3//4-40)
+        self.filenameText.move(int(W*1.1//3), H*3//4)
+        self.directorynameText.move(int(W*1.1//3), H*3//4+30)
+        self.timeofeventText.move(int(W*2.3//4)-30, 30)
+        self.savedfset.move(int(W*1.1//3), H*3//4-40)
         self.qq.setFixedWidth(int(W//2.9))
         self.btn_startL.setFixedWidth(W//9-10)
         self.btn_startR.setFixedWidth(W//9-10)
@@ -546,7 +549,7 @@ class Appp(QMainWindow):
                     i += 1
             self.len_of_events = i
             self.box_of_events.addItems([str(j) for j in range(1, i+1)])
-            self.filenameText.setText(f'file name: {a}')
+            self.filenameText.setText(f'f_name: {a}')
         except:
             print('fuck')
     
@@ -782,7 +785,22 @@ class Ustanovka(QMainWindow):
         lay5 = QVBoxLayout()
 
         hay6 = QHBoxLayout()
+
+        self.spinBoxl = QSpinBox(self)
+        self.spinBoxl.setMinimum(0)
+        self.spinBoxl.setMaximum(400)
+        self.spinBoxl.setValue(0)
+        self.spinBoxl.valueChanged.connect(self.update_of_spinBoxl)
+
+        self.spinBoxr = QSpinBox(self)
+        self.spinBoxr.setMinimum(0)
+        self.spinBoxr.setMaximum(400)
+        self.spinBoxr.setValue(400)
+        self.spinBoxr.valueChanged.connect(self.update_of_spinBoxr)
+
         hay6.addWidget(toolbar1)
+        hay6.addWidget(self.spinBoxl)
+        hay6.addWidget(self.spinBoxr)
         hay6.addWidget(self.ba)
 
         hay7 = QHBoxLayout()
@@ -854,6 +872,20 @@ class Ustanovka(QMainWindow):
         self.centralwidget = widget
         self.setCentralWidget(widget)
         self.resized.connect(self.newSize)
+
+    def update_of_spinBoxr(self):
+        if self.spinBoxr.value() <= self.spinBoxl.value():
+            self.spinBoxr.setValue(self.spinBoxl.value()+1)
+        self.f1()
+        self.f2()
+        self.tr()
+
+    def update_of_spinBoxl(self):
+        if self.spinBoxr.value() <= self.spinBoxl.value():
+            self.spinBoxr.setValue(self.spinBoxl.value()-1)
+        self.f1()
+        self.f2()
+        self.tr()
 
     def startAutoPlayerUsR(self):
         self.workerAutoPlayerUs.stop()
@@ -1196,10 +1228,10 @@ class Ustanovka(QMainWindow):
         self.sc1.axes.cla()
 
         if self.ba.currentText() == 'Все':
-            self.sc1.axes.plot(self.a1, color='blue', label=f"a1")
-            self.sc1.axes.plot(self.a2, color='red', label=f"a2")
-            self.sc1.axes.plot(self.a3, color='green', label=f"a3")
-            self.sc1.axes.plot(self.a4, color='#00FFFF', label=f"a4")
+            self.sc1.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], self.a1[self.spinBoxl.value():self.spinBoxr.value()], color='blue', label=f"a1")
+            self.sc1.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], self.a2[self.spinBoxl.value():self.spinBoxr.value()], color='red', label=f"a2")
+            self.sc1.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], self.a3[self.spinBoxl.value():self.spinBoxr.value()], color='green', label=f"a3")
+            self.sc1.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], self.a4[self.spinBoxl.value():self.spinBoxr.value()], color='#00FFFF', label=f"a4")
             if q != 0:
                 self.sc1.axes.plot([q, q], [0, max(self.a1 + self.a2 + self.a3 + self.a4)], color='green')
             self.sc1.axes.legend(ncol=1, bbox_to_anchor=(1,1), loc='upper right')
@@ -1207,6 +1239,7 @@ class Ustanovka(QMainWindow):
             self.sc1.axes.grid(linestyle='--', color='pink')
             #self.sc.axes.set_xlim([0, 1023])
             self.sc1.axes.set_xlabel('time')
+            #self.sc1.axes.set_xlim([self.spinBoxl.value(), self.spinBoxr.value()])
             self.sc1.axes.set_ylabel('amplitude')
             self.sc1.draw()
             return None
@@ -1238,9 +1271,9 @@ class Ustanovka(QMainWindow):
 
         x = range(0,400)
             #ax.figure(figsize=(7,4))
-        self.sc1.axes.plot(plot_data, color='blue')
+        self.sc1.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], plot_data[self.spinBoxl.value():self.spinBoxr.value()], color=color)
             #self.sc.axes.set_title(f'Event {self.event.currentText()} S{self.b.sipm} C{self.b.ch}')
-        self.sc1.axes.grid(linestyle='--', color=color)
+        self.sc1.axes.grid(linestyle='--', color='pink')
             #self.sc.axes.set_xlim([0, 1023])
         self.sc1.axes.set_xlabel('time')
         self.sc1.axes.set_ylabel('amplitude')
@@ -1251,10 +1284,10 @@ class Ustanovka(QMainWindow):
         self.sc2.axes.cla()
 
         if self.bd.currentText() == 'Все':
-            self.sc2.axes.plot(self.d1, color='blue', label=f"d1")
-            self.sc2.axes.plot(self.d2, color='red', label=f"d2")
-            self.sc2.axes.plot(self.d3, color='green', label=f"d3")
-            self.sc2.axes.plot(self.d4, color='#00FFFF', label=f"d4")
+            self.sc2.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], self.d1[self.spinBoxl.value():self.spinBoxr.value()], color='blue', label=f"d1")
+            self.sc2.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], self.d2[self.spinBoxl.value():self.spinBoxr.value()], color='red', label=f"d2")
+            self.sc2.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], self.d3[self.spinBoxl.value():self.spinBoxr.value()], color='green', label=f"d3")
+            self.sc2.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], self.d4[self.spinBoxl.value():self.spinBoxr.value()], color='#00FFFF', label=f"d4")
             if q != 0:
                 self.sc2.axes.plot([q, q], [0, max(self.d1 + self.d2 + self.d3 + self.d4)], color='green')
             self.sc2.axes.legend(ncol=1, bbox_to_anchor=(1,1), loc='upper right')
@@ -1293,7 +1326,7 @@ class Ustanovka(QMainWindow):
 
         x = range(0,400)
             #ax.figure(figsize=(7,4))
-        self.sc2.axes.plot(plot_data, color=color)
+        self.sc2.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], plot_data[self.spinBoxl.value():self.spinBoxr.value()], color=color)
             #self.sc.axes.set_title(f'Event {self.event.currentText()} S{self.b.sipm} C{self.b.ch}')
         self.sc2.axes.grid(linestyle='--', color='pink')
             #self.sc.axes.set_xlim([0, 1023])
@@ -1308,7 +1341,7 @@ class Ustanovka(QMainWindow):
         self.sc3.axes.cla()    
         x = range(0,400)
             #ax.figure(figsize=(7,4))
-        self.sc3.axes.plot(self.tr1, color='blue')
+        self.sc3.axes.plot(range(0, 400)[self.spinBoxl.value():self.spinBoxr.value()], self.tr1[self.spinBoxl.value():self.spinBoxr.value()], color='blue')
             #self.sc.axes.set_title(f'Event {self.event.currentText()} S{self.b.sipm} C{self.b.ch}')
         self.sc3.axes.grid(linestyle='--', color='pink')
             #self.sc.axes.set_xlim([0, 1023])
