@@ -6,7 +6,7 @@ import pandas as pd
 
 import colorsys
 from PyQt6 import uic  # Импортируем uic
-from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QVBoxLayout, QLabel, QMenu, QPushButton, QWidget, QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QMessageBox, QSlider, QPlainTextEdit, QTextBrowser, QHBoxLayout, QGroupBox
+from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QVBoxLayout, QLabel, QMenu, QPushButton, QWidget, QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QMessageBox, QSlider, QPlainTextEdit, QTextBrowser, QHBoxLayout, QGroupBox, QGridLayout
 from PyQt6.QtGui import QPixmap, QFont, QAction
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import QObject, QThread, pyqtSignal as Signal, pyqtSlot as Slot, Qt
@@ -85,15 +85,24 @@ class Appp(QMainWindow):
         self.btn_startL = QPushButton('<<', self, clicked=self.stratAutoPlayerL)
         self.btn_stop = QPushButton('Stop', self, clicked=lambda: self.workerAutoPlayer.stop())
         self.sliderAutoPlayer = QSlider(self)
+        self.filenameText = QLabel('None', self)
+        self.directorynameText = QLabel('None', self)
+        self.timeofeventText = QLabel('None', self)
+        self.savedfset = QPushButton('Save dir and\nfilename in config', self)
 
 
         self.centralwidget = QWidget()
+
+        Allwidget = QHBoxLayout()
+        self.grid = QGridLayout()
+        Allwidget.addLayout(self.grid)
+
+        self.leftVbox = QVBoxLayout()
+
         hay = QVBoxLayout()
         hay.addWidget(QWidget())
-        LAY = QHBoxLayout()
         self.qq = QWidget()
-        self.qq.setFixedWidth(100)
-        LAY.addWidget(self.qq)
+        self.qq.setFixedHeight(100)
         lay = QHBoxLayout()
         
         
@@ -105,10 +114,23 @@ class Appp(QMainWindow):
         
         lay.addWidget(self.sliderAutoPlayer)    
 
-        LAY.addLayout(lay)
-        hay.addLayout(LAY)
+        self.leftVbox.addWidget(self.timeofeventText)
+        self.leftVbox.addWidget(self.qq)
+
+        vbox = QVBoxLayout()
+
+        vbox.addWidget(self.filenameText)
+        vbox.addWidget(self.directorynameText)
+        vbox.addWidget(self.savedfset)
+
+        self.leftVbox.addLayout(vbox)
+
+        self.leftVbox.addLayout(lay)
         
-        self.centralwidget.setLayout(hay)
+        #Allwidget.addLayout(self.grid)
+        Allwidget.addLayout(self.leftVbox)
+        
+        self.centralwidget.setLayout(Allwidget)
 
         self.setCentralWidget(self.centralwidget)
         self.resized.connect(self.newSize)
@@ -181,22 +203,25 @@ class Appp(QMainWindow):
             self.buttons.append(but)
         self.coords = coords
 
-        self.filenameText = QLabel('None', self)
+        self.spinBoxL = 0
+        self.spinBoxR = 400
+
+        
         self.filenameText.move(40, 40)
         self.filenameText.setFont(QFont("Times", 10))
         self.filenameText.setFixedWidth(500)
 
-        self.directorynameText = QLabel('None', self)
+        
         self.directorynameText.move(40, 60)
         self.directorynameText.setFont(QFont("Times", 10))
         self.directorynameText.setFixedWidth(500)
 
-        self.timeofeventText = QLabel('None', self)
+        
         self.timeofeventText.move(10, 80)
         self.timeofeventText.setFont(QFont("Times", 10))
         self.timeofeventText.setFixedSize(500, 500)
 
-        self.savedfset = QPushButton('Save dir and\nfilename in config', self)
+        
         self.savedfset.move(10, 100)
         self.savedfset.setFixedSize(120, 40)
         self.savedfset.clicked.connect(self.savedffunc)
@@ -369,7 +394,7 @@ class Appp(QMainWindow):
         
         if str(fname) != '':
             self.directory_of_ustanovki = str(fname)
-            self.directorynameText.setText(f'dir: {self.directory_of_ustanovki}')
+            self.directorynameText.setText(f'    dir: {self.directory_of_ustanovki}')
             #self.openingFile(fname)
         else:
             return None   
@@ -473,6 +498,8 @@ class Appp(QMainWindow):
         H = self.centralwidget.frameSize().height()
         W = self.centralwidget.frameSize().width()
 
+        self.timeofeventText.setFont(QFont("Times", 10))
+
         #self.btn_start.move(W-65, 25)
         #self.btn_stop.move(W-65, 50)
         #self.sliderAutoPlayer.move(W-65, 75)
@@ -493,10 +520,11 @@ class Appp(QMainWindow):
         #w = round(W/2)
         #h = round(H/2)
         for i in self.buttons:
-            i.setFixedSize(S, S)
+            i.setFixedSize(round(S//1.1), round(S//1.1))
             
-            i.setStyleSheet(" QPushButton {background-color: " + i.col + " ; color: " + i.textcol +" ; border-radius: "+str(int(i.frameSize().width()/2))+"px; font-size: " +str(int(i.frameSize().width()/4.3))+ "px ; border: 2px solid" + i.colb + "} " # QPushButton:hover { background-color: rgb(16, 16, 24) ; color: rgb(76, 76, 76);}
+            i.setStyleSheet(" QPushButton {background-color: " + i.col + " ; color: " + i.textcol +" ; border-radius: "+str(int(i.frameSize().width()/2))+"px; font-size: " +str(int(i.frameSize().width()/2.9))+ "px ; border: 2px solid" + i.colb + "} " # QPushButton:hover { background-color: rgb(16, 16, 24) ; color: rgb(76, 76, 76);}
                                         "QPushButton:pressed {background-color: #b784a7 ; }")
+            #i.setFont(QFont("Times", 150))
             if i.znach is None:
                 i.setText(f'{i.ch}')   
             else:
@@ -504,20 +532,25 @@ class Appp(QMainWindow):
                     i.setText(f'{int(i.znach)}\nCh:{i.ch}') 
                 else:
                     k = str(str(int(i.znach)) + str("\n" if self.HSipm else "") if self.HZnach else "") + str("SIPM:" + str(i.sipm) + str("\n" if self.HChan else "") if self.HSipm else "") + str("Ch:" + str(i.ch) if self.HChan else "")
-                    i.setText(k)   
-            i.move(round((i.x - 250) * S / moveX) + W // 2+movingX - W//5, round((i.y) * S / moveY)+ H // 2 + movingY)
+                    i.setText(k)  
 
-        self.filenameText.move(int(W*1.1//3), H*3//4)
-        self.directorynameText.move(int(W*1.1//3), H*3//4+30)
-        self.timeofeventText.move(int(W*2.3//4)-30, 30)
-        self.savedfset.move(int(W*1.1//3), H*3//4-40)
-        self.qq.setFixedWidth(int(W//2.9))
-        self.btn_startL.setFixedWidth(W//9-10)
-        self.btn_startR.setFixedWidth(W//9-10)
-        self.buttonleft.setFixedWidth(W//9-10)
-        self.buttonright.setFixedWidth(W//9-10)
-        self.btn_stop.setFixedWidth(W//9-10)
-        self.sliderAutoPlayer.setFixedWidth(W//9-10)
+            self.grid.addWidget(i, int(i.y/6+140)//10, int(i.x/6+140)//10)
+            #i.move()
+
+        #self.filenameText.move(int(W*1.3//3)-20, H*3//4)
+        #self.directorynameText.move(int(W*1.3//3)-20, H*3//4+30)
+        #self.timeofeventText.move(int(W*2.4//4)-50, 30)
+        #self.savedfset.move(int(W*1.3//3), H*3//4-40)
+
+        self.qq.setFixedHeight(int(W//2.9))
+
+        self.btn_startL.setFixedWidth(W//11-10)
+        self.btn_startR.setFixedWidth(W//11-10)
+        self.buttonleft.setFixedWidth(W//11-10)
+        self.buttonright.setFixedWidth(W//11-10)
+        self.btn_stop.setFixedWidth(W//11-10)
+        self.sliderAutoPlayer.setFixedWidth(W//11-10)
+
             
     def OpenF(self):
         '''
@@ -549,7 +582,7 @@ class Appp(QMainWindow):
                     i += 1
             self.len_of_events = i
             self.box_of_events.addItems([str(j) for j in range(1, i+1)])
-            self.filenameText.setText(f'f_name: {a}')
+            self.filenameText.setText(f'    f_name: {a}')
         except:
             print('fuck')
     
@@ -631,7 +664,7 @@ class Ustanovka(QMainWindow):
         self.setMinimumHeight(450)
         
 
-        self.parent = parent
+        self.parentt = parent
         self.b = b
         self.df=df
         self.ev = event
@@ -789,13 +822,13 @@ class Ustanovka(QMainWindow):
         self.spinBoxl = QSpinBox(self)
         self.spinBoxl.setMinimum(0)
         self.spinBoxl.setMaximum(400)
-        self.spinBoxl.setValue(0)
+        self.spinBoxl.setValue(self.parentt.spinBoxL)
         self.spinBoxl.valueChanged.connect(self.update_of_spinBoxl)
 
         self.spinBoxr = QSpinBox(self)
         self.spinBoxr.setMinimum(0)
         self.spinBoxr.setMaximum(400)
-        self.spinBoxr.setValue(400)
+        self.spinBoxr.setValue(self.parentt.spinBoxR)
         self.spinBoxr.valueChanged.connect(self.update_of_spinBoxr)
 
         hay6.addWidget(toolbar1)
@@ -874,15 +907,15 @@ class Ustanovka(QMainWindow):
         self.resized.connect(self.newSize)
 
     def update_of_spinBoxr(self):
-        if self.spinBoxr.value() <= self.spinBoxl.value():
-            self.spinBoxr.setValue(self.spinBoxl.value()+1)
+        self.parentt.spinBoxR = self.spinBoxr.value()
+        self.parentt.spinBoxL = self.spinBoxl.value()
         self.f1()
         self.f2()
         self.tr()
 
     def update_of_spinBoxl(self):
-        if self.spinBoxr.value() <= self.spinBoxl.value():
-            self.spinBoxr.setValue(self.spinBoxl.value()-1)
+        self.parentt.spinBoxR = self.spinBoxr.value()
+        self.parentt.spinBoxL = self.spinBoxl.value()
         self.f1()
         self.f2()
         self.tr()
